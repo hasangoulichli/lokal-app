@@ -33,7 +33,7 @@ export default function Login() {
     if (pin.length === 4) {
       handleLogin(pin);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [pin]);
 
   const handleLogin = (enteredPin) => {

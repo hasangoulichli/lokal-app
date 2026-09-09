@@ -7,7 +7,7 @@ import VariationModal from "@/components/VariationModal";
 import { CATEGORIES, KITCHEN_STAGES, isItemSoldOut, getCheckedStages } from "@/lib/menu";
 import { getMenuItems } from "@/lib/menuData";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Waves } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

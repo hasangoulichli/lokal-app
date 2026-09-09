@@ -1,3 +1,4 @@
+import { useState } from "react";
 import React from 'react';
 import { Clock, CheckCircle2, MapPin } from 'lucide-react';
 
@@ -14,6 +15,10 @@ function minutesAgo(dateStr) {
 }
 
 export default function OrderCard({ order, onComplete, hidePrices }) {
+
+
+  const [completing, setCompleting] = useState(false);
+
   // ÇÖKMEYİ ÖNLEYEN ZIRH: Eğer order nesnesi veya items dizisi yoksa kart boş döner
   if (!order || !order.items || !Array.isArray(order.items)) {
     return null;
@@ -21,7 +26,6 @@ export default function OrderCard({ order, onComplete, hidePrices }) {
 
   const mins = minutesAgo(order.created_date);
   const isUrgent = mins >= 10;
-  const [completing, setCompleting] = React.useState(false);
 
   const handleComplete = async () => {
     setCompleting(true);

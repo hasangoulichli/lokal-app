@@ -1,4 +1,4 @@
-import { Clock, CheckCheck, Table2 } from "lucide-react";
+import { Clock, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
