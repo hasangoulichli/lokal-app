@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { getMenuItems, migrateMenuToSupabase } from "@/lib/menuData";
 import { CATEGORIES } from "@/lib/menu"; 
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Database, Search, Edit2, Plus, Trash2, LayoutDashboard, Utensils, BookOpen } from "lucide-react";
+import { Loader2, Database, Search, Plus, Trash2, LayoutDashboard, Utensils, BookOpen } from "lucide-react";
 import AppLayout from "@/components/AppLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

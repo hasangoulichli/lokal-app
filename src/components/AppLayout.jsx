@@ -27,7 +27,7 @@ export default function AppLayout({ children }) {
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       {/* Masaüstü Üst Menü */}
-      <header className="hidden select-none border-b border-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60 md:flex">
+      <header className="hidden select-none border-b border-white/10 bg-card/70 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 md:flex">
         <div className="flex h-16 w-full items-center justify-between px-4 pt-[env(safe-area-inset-top)] md:px-6">
           
           {/* Logo */}
@@ -74,14 +74,14 @@ export default function AppLayout({ children }) {
       <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
 
       {/* Mobil Alt Menü */}
-      <nav className="select-none border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <nav className="select-none border-t border-white/10 bg-card/70 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         <div className="flex items-stretch justify-around">
           {visibleTabs.map((tab) => (
             <Link
               key={tab.to}
               to={tab.to}
               className={cn(
-                "flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                "flex flex-1 flex-col items-center justify-center gap-1 py-3 min-h-[64px] text-[11px] font-medium transition-all active:scale-95",
                 location.pathname === tab.match ? "text-primary" : "text-muted-foreground"
               )}
             >
@@ -93,7 +93,7 @@ export default function AppLayout({ children }) {
           {/* Mobil Çıkış Butonu */}
           <button
             onClick={() => logout(true)}
-            className="flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium text-red-500 transition-colors"
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-3 min-h-[64px] text-[11px] font-medium text-red-500 transition-all active:scale-95"
           >
             <LogOut className="h-5 w-5" />
             Çıkış
