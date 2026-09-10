@@ -70,40 +70,46 @@ export default function CashierScreen() {
       const paidAt = new Date().toISOString();
       const updatedIds = closeTarget.orderIds;
       
-      const dbPaymentStatus = mode === "paid" ? "paid" : "debt";
-      
-      const totalTableAmount = closeTarget.totalAmount;
-      const amountToSave = mode === "paid" ? totalTableAmount : (Number(paidAmount) || 0);
+      if (mode === "paid" || mode === "debt") {
+        const dbPaymentStatus = mode === "paid" ? "paid" : "debt";
+        const totalTableAmount = closeTarget.totalAmount;
 
-      const { error } = await supabase
-        .from("orders")
-        .update({
-          paymentStatus: dbPaymentStatus,
-          paidAt,
-          paid_amount: amountToSave,
-          ...(customerName ? { customerName } : {}),
-        })
-        .in("id", updatedIds);
-
-      if (error) throw error;
+        // Full payment or full debt closure
+        for (const id of updatedIds) {
+           const specificOrder = orders.find(o => o.id === id);
+           const amountToSave = mode === "paid" ? specificOrder.totalAmount : 0;
+           await supabase.from("orders").update({
+             paymentStatus: dbPaymentStatus, paidAt, paid_amount: amountToSave, ...(customerName ? { customerName } : {}),
+           }).eq("id", id);
+        }
+      } else if (mode === "split" || mode === "partial") {
+        // Smart POS partial payment: Insert a negative payment row to reduce balance but keep table active
+        const paymentOrder = {
+           id: Date.now().toString(),
+           tableNumber: closeTarget.tableNumber,
+           waiterName: "Kasa (Tahsilat)",
+           status: "completed",
+           paymentStatus: null, // Table remains open!
+           currentStage: 8,
+           items: [{
+             name: `💳 ${mode === 'split' ? 'Alman Usulü (Bölüşük)' : 'Parçalı Ödeme'}`,
+             quantity: 1,
+             unitPrice: -Number(paidAmount),
+             totalPrice: -Number(paidAmount),
+             variationLabel: ""
+           }],
+           totalAmount: -Number(paidAmount),
+           created_date: new Date().toISOString()
+        };
+        const { error } = await supabase.from("orders").insert([paymentOrder]);
+        if (error) throw error;
+      }
 
       await loadOrders();
-
-      if (mode === "partial") {
-        toast({ title: `Masa ${closeTarget.tableNumber} için ${amountToSave} TL alındı, kalan tutar veresiyeye yazıldı.` });
-      } else if (mode === "debt") {
-        toast({ title: `Masa ${closeTarget.tableNumber} hesabının tamamı veresiyeye yazıldı.` });
-      } else {
-        toast({ title: `Masa ${closeTarget.tableNumber} hesabı kapatıldı ✓` });
-      }
-      
       setCloseTarget(null);
+      toast({ title: "İşlem Başarılı", description: mode === 'split' || mode === 'partial' ? "Kısmi tahsilat yapıldı, masa açık." : "Hesap kapatıldı." });
     } catch {
-      toast({
-        variant: "destructive",
-        title: "Kapatılamadı",
-        description: "Tekrar deneyin.",
-      });
+      toast({ variant: "destructive", title: "Hata", description: "İşlem gerçekleştirilemedi." });
     } finally {
       setProcessing(false);
     }

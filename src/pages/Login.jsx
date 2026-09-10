@@ -33,7 +33,7 @@ export default function Login() {
     if (pin.length === 4) {
       handleLogin(pin);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [pin]);
 
   const handleLogin = (enteredPin) => {
@@ -86,7 +86,7 @@ export default function Login() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-5 py-10">
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl sm:p-8">
+      <div className="w-full max-w-sm rounded-3xl border border-white/20 bg-card/60 backdrop-blur-xl p-6 shadow-2xl sm:p-8">
         
         <div className="mb-6 flex flex-col items-center text-center">
           <div 
@@ -169,7 +169,7 @@ export default function Login() {
                 type="button"
                 onClick={() => handlePadClick(num.toString())}
                 className={cn(
-                  "flex h-14 items-center justify-center rounded-2xl text-xl font-semibold text-foreground transition-colors sm:h-16 sm:text-2xl",
+                  "flex h-16 items-center justify-center rounded-2xl text-xl font-semibold text-foreground transition-all active:scale-95 sm:text-2xl",
                   adminUnlocked 
                     ? "bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500 active:text-white"
                     : "bg-secondary hover:bg-secondary/80 active:bg-primary active:text-primary-foreground"
@@ -183,7 +183,7 @@ export default function Login() {
               type="button"
               onClick={() => handlePadClick("0")}
               className={cn(
-                "flex h-14 items-center justify-center rounded-2xl text-xl font-semibold text-foreground transition-colors sm:h-16 sm:text-2xl",
+                "flex h-16 items-center justify-center rounded-2xl text-xl font-semibold text-foreground transition-all active:scale-95 sm:text-2xl",
                 adminUnlocked 
                   ? "bg-amber-500/10 hover:bg-amber-500/20 active:bg-amber-500 active:text-white"
                   : "bg-secondary hover:bg-secondary/80 active:bg-primary active:text-primary-foreground"
@@ -194,7 +194,7 @@ export default function Login() {
             <button
               type="button"
               onClick={handleDelete}
-              className="flex h-14 items-center justify-center rounded-2xl bg-secondary text-muted-foreground transition-colors hover:bg-secondary/80 hover:text-foreground active:bg-destructive active:text-destructive-foreground sm:h-16"
+              className="flex h-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground active:scale-95 active:bg-destructive active:text-destructive-foreground"
             >
               <Delete className="h-6 w-6 sm:h-7 sm:w-7" />
             </button>

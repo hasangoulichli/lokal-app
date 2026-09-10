@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { ChefHat, ArrowLeft, Clock, CheckCircle2, FlaskConical } from 'lucide-react';
+import { ChefHat, ArrowLeft, CheckCircle2, FlaskConical } from 'lucide-react';
 import OrderCard from '@/components/restaurant/OrderCard';
 
 export default function KitchenView() {

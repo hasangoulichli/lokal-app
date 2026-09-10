@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, AlertTriangle, Calculator, UserSearch, History, Check } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Calculator, UserSearch, History, Check, Coins, SplitSquareHorizontal, Users } from "lucide-react";
 
 export default function CloseAccountDialog({ table, processing, onConfirm, onClose }) {
   const { toast } = useToast();
@@ -22,7 +22,6 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
   const [searchingCustomer, setSearchingCustomer] = useState(false);
   const [closingOldDebt, setClosingOldDebt] = useState(null); 
 
-  // OTOMATİK KUR ÇEKME (Günde 1 kez çalışır, tarayıcıyı yormaz)
   useEffect(() => {
     if (currency !== "TL") {
       const fetchRates = async () => {
@@ -62,13 +61,11 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
     if (!table) {
       setMode(null); setCustomerName(""); setPaidAmount(""); setGivenAmount("");
       setCurrency("TL"); setExchangeRate(""); setPastDebts([]);
-    } else {
-      setPaidAmount(table.totalAmount.toString());
     }
   }, [table]);
 
   useEffect(() => {
-    if (customerName.length > 2 && mode !== 'paid') {
+    if (customerName.length > 2 && mode === 'debt') {
       const searchDebts = async () => {
         setSearchingCustomer(true);
         try {
@@ -113,60 +110,110 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
   let isInsufficient = false;
 
   if (currency === "TL") {
-    changeToGive = numGiven - total;
-    isInsufficient = numGiven > 0 && numGiven < total;
+    changeToGive = numGiven - (mode === "split" || mode === "partial" ? numPaid : total);
+    isInsufficient = numGiven > 0 && numGiven < (mode === "split" || mode === "partial" ? numPaid : total);
   } else {
     const givenInTL = numGiven * numRate;
-    changeToGive = givenInTL - total;
-    isInsufficient = numGiven > 0 && givenInTL < total;
+    changeToGive = givenInTL - (mode === "split" || mode === "partial" ? numPaid : total);
+    isInsufficient = numGiven > 0 && givenInTL < (mode === "split" || mode === "partial" ? numPaid : total);
   }
 
-  const remainingDebt = total > numPaid ? total - numPaid : 0;
-
   const handleConfirm = () => {
-    let finalMode = mode;
-    if (remainingDebt > 0 && numPaid > 0) finalMode = "partial"; 
-    onConfirm(finalMode, customerName.trim(), numPaid);
+    onConfirm(mode, customerName.trim(), numPaid);
   };
 
   const isFormValid = () => {
     if (mode === "paid") return true;
     if (mode === "debt") return customerName.trim().length > 0;
+    if (mode === "split" || mode === "partial") return numPaid > 0 && numPaid <= total;
     return false;
   };
 
   return (
     <Dialog open={!!table} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-xl border-border max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl">
         <DialogHeader>
-          <DialogTitle>Masa {table.tableNumber} — Hesap Kapat</DialogTitle>
+          <DialogTitle>Masa {table.tableNumber} — Hesap Yönetimi</DialogTitle>
           <DialogDescription>
-            Adisyon Toplamı: <span className="font-bold text-primary text-lg">{total.toLocaleString("tr-TR")} TL</span> · {table.orderCount} sipariş
+            Kalan Bakiye: <span className="font-black text-primary text-xl">{total.toLocaleString("tr-TR")} TL</span>
           </DialogDescription>
         </DialogHeader>
 
         {!mode ? (
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <button onClick={() => { setMode("paid"); setPaidAmount(total.toString()); }} className="flex flex-col items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 transition-colors hover:bg-emerald-500/20">
+          <div className="grid grid-cols-2 gap-3 pt-4 animate-in fade-in zoom-in-95">
+            <button onClick={() => { setMode("paid"); setPaidAmount(total.toString()); }} className="flex flex-col items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 transition-all hover:bg-emerald-500/20 active:scale-95 shadow-sm">
               <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-              <span className="text-sm font-semibold text-emerald-500">Tamamı Ödendi</span>
+              <span className="text-sm font-bold text-emerald-500">Tamamı Ödendi</span>
             </button>
-            <button onClick={() => { setMode("debt"); setPaidAmount("0"); }} className="flex flex-col items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 transition-colors hover:bg-amber-500/20">
+            <button onClick={() => { setMode("split"); setPaidAmount(""); }} className="flex flex-col items-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-5 transition-all hover:bg-indigo-500/20 active:scale-95 shadow-sm">
+              <SplitSquareHorizontal className="h-8 w-8 text-indigo-500" />
+              <span className="text-sm font-bold text-indigo-500">Alman Usulü (Böl)</span>
+            </button>
+            <button onClick={() => { setMode("partial"); setPaidAmount(""); }} className="flex flex-col items-center gap-2 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-5 transition-all hover:bg-blue-500/20 active:scale-95 shadow-sm">
+              <Coins className="h-8 w-8 text-blue-500" />
+              <span className="text-sm font-bold text-blue-500">Parçalı Tutar Gir</span>
+            </button>
+            <button onClick={() => { setMode("debt"); setPaidAmount("0"); }} className="flex flex-col items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5 transition-all hover:bg-amber-500/20 active:scale-95 shadow-sm">
               <AlertTriangle className="h-8 w-8 text-amber-500" />
-              <span className="text-sm font-semibold text-amber-500">Veresiye (Borç)</span>
+              <span className="text-sm font-bold text-amber-500">Veresiye (Borç)</span>
             </button>
           </div>
         ) : (
-          <div className="space-y-6 pt-4">
+          <div className="space-y-6 pt-4 animate-in slide-in-from-right-4 duration-300">
             
+            {/* ALMAN USULÜ (SPLIT CHECK) */}
+            {mode === "split" && (
+              <div className="space-y-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 shadow-sm">
+                <Label className="text-indigo-600 font-bold flex items-center gap-2 uppercase tracking-wider text-xs">
+                  <Users className="h-4 w-4" /> Hesabı Kişi Sayısına Böl
+                </Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {[2, 3, 4, 5, 6].map(n => (
+                    <Button
+                      key={n}
+                      variant="outline"
+                      onClick={() => setPaidAmount((total / n).toFixed(2))}
+                      className="font-black text-lg border-indigo-500/30 text-indigo-600 hover:bg-indigo-500/20 h-12 rounded-xl"
+                    >
+                      {n}
+                    </Button>
+                  ))}
+                </div>
+                <div className="space-y-1.5 pt-2 border-t border-indigo-500/20 mt-2">
+                  <Label className="text-xs font-bold text-muted-foreground">Kişi Başı Düşen / Ödenecek Tutar (TL)</Label>
+                  <Input type="number" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} className="font-black text-2xl h-14 text-center border-indigo-500/50 rounded-xl" />
+                </div>
+                {numPaid > 0 && numPaid < total && (
+                  <p className="text-xs text-indigo-600 font-bold text-center animate-pulse">
+                    Bu ödemeden sonra masada {(total - numPaid).toLocaleString("tr-TR")} TL bakiye kalacak.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* PARÇALI ÖDEME */}
+            {mode === "partial" && (
+              <div className="space-y-3 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-5 shadow-sm">
+                 <Label className="text-blue-600 font-bold uppercase tracking-wider text-xs flex items-center gap-2">
+                    <Coins className="h-4 w-4" /> Özel Tutar Girin
+                 </Label>
+                 <Input type="number" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="Örn: 500" className="font-black text-2xl h-14 text-center border-blue-500/50 rounded-xl" />
+                 {numPaid > 0 && numPaid < total && (
+                  <p className="text-xs text-blue-600 font-bold text-center">
+                    Kalan bakiye masada açık kalacaktır.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* VERESİYE İŞLEMLERİ */}
             {mode === "debt" && (
-              <div className="space-y-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5 shadow-sm">
                 <div className="space-y-1.5">
-                  <Label className="text-amber-600 font-semibold flex items-center gap-2">
+                  <Label className="text-amber-600 font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
                     <UserSearch className="h-4 w-4" /> Müşteri Adı Soyadı
                   </Label>
-                  <Input autoFocus value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Örn: Ahmet Yılmaz" className="border-amber-500/30" />
+                  <Input autoFocus value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Örn: Ahmet Yılmaz" className="border-amber-500/30 h-12 rounded-xl" />
                 </div>
 
                 {searchingCustomer ? (
@@ -181,12 +228,12 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
                         const unpaid = debt.totalAmount - (debt.paid_amount || 0);
                         const isClosing = closingOldDebt === debt.id;
                         return (
-                          <div key={debt.id} className="flex justify-between items-center text-sm p-2 rounded bg-background/50 border border-border">
+                          <div key={debt.id} className="flex justify-between items-center text-sm p-3 rounded-xl bg-background/80 border border-border">
                             <div className="flex flex-col">
                               <span className="font-bold text-amber-500">{unpaid.toLocaleString("tr-TR")} TL</span>
                               <span className="text-muted-foreground text-[10px]">{new Date(debt.created_date).toLocaleDateString('tr-TR')}</span>
                             </div>
-                            <Button size="sm" variant="outline" disabled={isClosing} onClick={() => handlePayOldDebt(debt.id, debt.totalAmount)} className="h-7 text-xs bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/30">
+                            <Button size="sm" variant="outline" disabled={isClosing} onClick={() => handlePayOldDebt(debt.id, debt.totalAmount)} className="h-8 text-xs bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/30 rounded-lg">
                               {isClosing ? "Kapatılıyor..." : <><Check className="mr-1 h-3 w-3"/> Kapat</>}
                             </Button>
                           </div>
@@ -194,32 +241,20 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
                       })}
                     </div>
                   </div>
-                ) : customerName.length > 2 ? (
-                  <p className="text-xs text-emerald-500">Bu müşterinin eski borcu bulunmuyor.</p>
                 ) : null}
-
-                <div className="space-y-1.5 pt-2 border-t border-amber-500/20">
-                  <Label className="text-sm">Bugün Alınan Peşinat (TL)</Label>
-                  <div className="flex items-center gap-2">
-                    <Input type="number" value={paidAmount} onChange={(e) => setPaidAmount(e.target.value)} placeholder="Örn: 500" />
-                    <div className="text-sm font-semibold w-1/2 text-right">
-                      Kalan Borç: <span className="text-amber-500">{remainingDebt.toLocaleString("tr-TR")} TL</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
-            {/* DÖVİZLİ PARA ÜSTÜ HESAPLAYICI */}
-            {mode === "paid" && (
-              <div className="space-y-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-                <Label className="text-emerald-600 font-semibold flex items-center gap-2">
+            {/* DÖVİZLİ PARA ÜSTÜ HESAPLAYICI (Sadece Tamamı, Bölüşük ve Parçalı modlarda) */}
+            {(mode === "paid" || mode === "split" || mode === "partial") && (
+              <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 shadow-sm">
+                <Label className="text-emerald-600 font-bold flex items-center gap-2 text-xs uppercase tracking-wider">
                   <Calculator className="h-4 w-4" /> Döviz / Para Üstü Hesaplayıcı
                 </Label>
                 
                 <div className="grid grid-cols-4 gap-2">
                   {["TL", "GBP", "EUR", "USD"].map(c => (
-                    <Button key={c} type="button" variant={currency === c ? "default" : "outline"} className={currency === c ? "bg-emerald-500 hover:bg-emerald-600 font-bold" : "font-semibold text-muted-foreground"} onClick={() => setCurrency(c)}>
+                    <Button key={c} type="button" variant={currency === c ? "default" : "outline"} className={`rounded-xl ${currency === c ? "bg-emerald-500 hover:bg-emerald-600 font-bold" : "font-semibold text-muted-foreground"}`} onClick={() => setCurrency(c)}>
                       {c}
                     </Button>
                   ))}
@@ -227,23 +262,23 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs">Müşterinin Verdiği ({currency})</Label>
-                    <Input type="number" value={givenAmount} onChange={(e) => setGivenAmount(e.target.value)} placeholder="Örn: 50" className="font-bold text-lg h-11" />
+                    <Label className="text-[10px] font-bold text-muted-foreground uppercase">Verilen ({currency})</Label>
+                    <Input type="number" value={givenAmount} onChange={(e) => setGivenAmount(e.target.value)} placeholder="Örn: 50" className="font-bold text-lg h-12 rounded-xl" />
                   </div>
                   
                   {currency !== "TL" && (
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Günlük Kur (Değiştirilebilir)</Label>
-                      <Input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} placeholder="Kur yükleniyor..." className="font-bold h-11 text-amber-600" />
+                      <Label className="text-[10px] font-bold text-muted-foreground uppercase">Günlük Kur</Label>
+                      <Input type="number" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} placeholder="..." className="font-bold h-12 text-amber-600 rounded-xl" />
                     </div>
                   )}
                 </div>
 
                 {numGiven > 0 && (
-                  <div className={`p-3 rounded-xl border flex justify-between items-center ${isInsufficient ? 'bg-destructive/10 border-destructive/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-                    <span className="text-sm font-medium">{isInsufficient ? "Eksik Tutar:" : "Verilecek Para Üstü:"}</span>
+                  <div className={`p-4 rounded-xl border flex justify-between items-center ${isInsufficient ? 'bg-destructive/10 border-destructive/30' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
+                    <span className="text-sm font-bold text-foreground">{isInsufficient ? "Eksik Tutar:" : "Para Üstü:"}</span>
                     <div className="text-right">
-                      <span className={`text-xl font-black ${isInsufficient ? 'text-destructive' : 'text-emerald-500'}`}>
+                      <span className={`text-2xl font-black ${isInsufficient ? 'text-destructive' : 'text-emerald-500'}`}>
                         {Math.abs(changeToGive).toLocaleString("tr-TR", {maximumFractionDigits: 2})} TL
                       </span>
                       {currency !== "TL" && !isInsufficient && (
@@ -259,9 +294,9 @@ export default function CloseAccountDialog({ table, processing, onConfirm, onClo
 
             {/* BUTONLAR */}
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setMode(null)} disabled={processing}>Geri</Button>
-              <Button className={`flex-1 ${mode === "paid" ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-amber-500 hover:bg-amber-600 text-white"}`} disabled={!isFormValid() || processing} onClick={handleConfirm}>
-                {processing ? "Kaydediliyor..." : mode === "paid" ? "Hesabı Kapat" : remainingDebt > 0 && numPaid > 0 ? `${remainingDebt} TL Borç Kaydet` : "Tümünü Borca Yaz"}
+              <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={() => setMode(null)} disabled={processing}>Geri</Button>
+              <Button className={`flex-1 rounded-xl h-12 font-bold shadow-lg active:scale-95 transition-all ${mode === "paid" ? "bg-emerald-500 hover:bg-emerald-600 text-white" : mode === "debt" ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-primary hover:bg-primary/90 text-primary-foreground"}`} disabled={!isFormValid() || processing} onClick={handleConfirm}>
+                {processing ? "İşleniyor..." : mode === "paid" ? "Hesabı Kapat" : mode === "debt" ? "Veresiyeye Yaz" : `Tahsil Et (${numPaid} TL)`}
               </Button>
             </div>
           </div>

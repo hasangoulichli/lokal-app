@@ -1,3 +1,4 @@
+import { useState } from "react";
 import React from 'react';
 import { Clock, CheckCircle2, MapPin } from 'lucide-react';
 
@@ -14,6 +15,10 @@ function minutesAgo(dateStr) {
 }
 
 export default function OrderCard({ order, onComplete, hidePrices }) {
+
+
+  const [completing, setCompleting] = useState(false);
+
   // ÇÖKMEYİ ÖNLEYEN ZIRH: Eğer order nesnesi veya items dizisi yoksa kart boş döner
   if (!order || !order.items || !Array.isArray(order.items)) {
     return null;
@@ -21,7 +26,6 @@ export default function OrderCard({ order, onComplete, hidePrices }) {
 
   const mins = minutesAgo(order.created_date);
   const isUrgent = mins >= 10;
-  const [completing, setCompleting] = React.useState(false);
 
   const handleComplete = async () => {
     setCompleting(true);
@@ -35,7 +39,7 @@ export default function OrderCard({ order, onComplete, hidePrices }) {
   };
 
   return (
-    <div className={`bg-card text-card-foreground rounded-3xl border-2 shadow-sm overflow-hidden flex flex-col transition-all ${isUrgent ? 'border-destructive/80 shadow-destructive/10' : 'border-amber-400/80 shadow-amber-400/10'}`}>
+    <div className={`bg-card/90 backdrop-blur-md text-card-foreground rounded-3xl border-2 shadow-2xl overflow-hidden flex flex-col transition-all ${isUrgent ? 'border-destructive/80 shadow-destructive/20' : 'border-amber-400/80 shadow-amber-400/20'}`}>
       
       {/* Card Header */}
       <div className={`px-5 py-3.5 flex items-center justify-between border-b border-border/40 ${isUrgent ? 'bg-destructive/10 text-destructive-foreground' : 'bg-amber-500/10 text-amber-900 dark:text-amber-200'}`}>
@@ -91,7 +95,7 @@ export default function OrderCard({ order, onComplete, hidePrices }) {
           onClick={handleComplete}
           disabled={completing}
           size="lg"
-          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-12 rounded-2xl shadow-md shadow-emerald-600/20 transition-all active:scale-[0.98]"
+          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-14 rounded-2xl shadow-xl shadow-emerald-600/30 transition-all active:scale-95"
         >
           <CheckCircle2 className="w-5 h-5" />
           {completing ? 'İşaretleniyor...' : 'Tamamlandı Olarak İşaretle'}
